@@ -1,0 +1,63 @@
+# https://taskfile.dev
+version: "3"
+
+env:
+  R: https://github.com/stopwords-iso
+
+tasks:
+  fetch-lists:
+    cmds:
+      - mkdir -p words
+      - wget -O words/en.txt $R/stopwords-en/raw/refs/heads/master/stopwords-en.txt
+      - wget -O words/zh.txt $R/stopwords-zh/raw/refs/heads/master/stopwords-zh.txt
+      - wget -O words/fr.txt $R/stopwords-fr/raw/refs/heads/master/stopwords-fr.txt
+      - wget -O words/de.txt $R/stopwords-de/raw/refs/heads/master/stopwords-de.txt
+      - wget -O words/ru.txt $R/stopwords-ru/raw/refs/heads/master/stopwords-ru.txt
+      - wget -O words/es.txt $R/stopwords-es/raw/refs/heads/master/stopwords-es.txt
+      - wget -O words/pt.txt $R/stopwords-pt/raw/refs/heads/master/stopwords-pt.txt
+      - wget -O words/id.txt $R/stopwords-id/raw/refs/heads/master/stopwords-id.txt
+      - wget -O words/it.txt $R/stopwords-it/raw/refs/heads/master/stopwords-it.txt
+      - wget -O words/ja.txt $R/stopwords-ja/raw/refs/heads/master/stopwords-ja.txt
+      - wget -O words/ko.txt $R/stopwords-ko/raw/refs/heads/master/stopwords-ko.txt
+      - wget -O words/tr.txt $R/stopwords-tr/raw/refs/heads/master/stopwords-tr.txt
+      - wget -O words/el.txt $R/stopwords-el/raw/refs/heads/master/stopwords-el.txt
+      - wget -O words/bn.txt $R/stopwords-bn/raw/refs/heads/master/stopwords-bn.txt
+      - wget -O words/ar.txt $R/stopwords-ar/raw/refs/heads/master/stopwords-ar.txt
+      - wget -O words/nl.txt $R/stopwords-nl/raw/refs/heads/master/stopwords-nl.txt
+      - wget -O words/ro.txt $R/stopwords-ro/raw/refs/heads/master/stopwords-ro.txt
+      - wget -O words/fa.txt $R/stopwords-fa/raw/refs/heads/master/stopwords-fa.txt
+      - wget -O words/cs.txt $R/stopwords-cs/raw/refs/heads/master/stopwords-cs.txt
+      - wget -O words/tl.txt $R/stopwords-tl/raw/refs/heads/master/stopwords-tl.txt
+      - wget -O words/hi.txt $R/stopwords-hi/raw/refs/heads/master/stopwords-hi.txt
+      - wget -O words/pl.txt $R/stopwords-pl/raw/refs/heads/master/stopwords-pl.txt
+      - wget -O words/no.txt $R/stopwords-no/raw/refs/heads/master/stopwords-no.txt
+      - wget -O words/uk.txt $R/stopwords-uk/raw/refs/heads/master/stopwords-uk.txt
+      - wget -O words/sv.txt $R/stopwords-sv/raw/refs/heads/master/stopwords-sv.txt
+      - wget -O words/bg.txt $R/stopwords-bg/raw/refs/heads/master/stopwords-bg.txt
+      - wget -O words/sk.txt $R/stopwords-sk/raw/refs/heads/master/stopwords-sk.txt
+
+  release:
+    desc: Tag and upload release
+    cmds:
+      - which gh
+      - test v{{.CLI_ARGS}}
+      - git tag v{{.CLI_ARGS}}
+      - git push
+      - git push --tags
+      - gh release create --generate-notes v{{.CLI_ARGS}}
+
+  lint:
+    desc: Run Go linters
+    cmds:
+      - golangci-lint run
+
+  test:
+    desc: Run go tests with coverage and timeout and without cache
+    cmds:
+      - go test -count 1 -cover -timeout 1s ./...
+
+  all:
+    desc: Run all tests and linters
+    cmds:
+      - task: lint
+      - task: test
