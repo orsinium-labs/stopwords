@@ -14,15 +14,15 @@ import (
 //go:embed words/*.txt
 var files embed.FS
 
-var dicts = sync.OnceValue(func() map[string]*Stopwords {
+var getDicts = sync.OnceValue(func() map[string]*Stopwords {
 	dicts := make(map[string]*Stopwords)
-	dir, err := files.ReadDir("")
+	dir, err := files.ReadDir("words")
 	if err != nil {
 		panic(err)
 	}
 	for _, entry := range dir {
 		fileName := entry.Name()
-		file, err := files.Open(fileName)
+		file, err := files.Open("words/" + fileName)
 		if err != nil {
 			panic(err)
 		}
@@ -31,20 +31,33 @@ var dicts = sync.OnceValue(func() map[string]*Stopwords {
 		for scanner.Scan() {
 			dict.Add(scanner.Text(), struct{}{})
 		}
-		dicts[fileName[:2]] = (*Stopwords)(dict)
+		dicts[fileName[:2]] = &Stopwords{Trie: dict}
 	}
 	files = embed.FS{}
 	return dicts
 })
 
 func init() {
-	go dicts()
+	go getDicts()
 }
 
-type Stopwords trie.Trie[struct{}]
+type Stopwords struct {
+	Trie *trie.Trie[struct{}]
+}
 
+func MustGet(lang string) *Stopwords {
+	dict := getDicts()[strings.ToLower(lang[:2])]
+	if dict == nil {
+		panic("cannot find stopwords dictionary for " + lang)
+	}
+	return dict
+}
+
+// Get stopwords for the given language.
+//
+// Returns nil if not found.
 func Get(lang string) *Stopwords {
-	return dicts()[strings.ToLower(lang[:2])]
+	return getDicts()[strings.ToLower(lang[:2])]
 }
 
 // A word in a text.
@@ -87,7 +100,8 @@ func (s *Stopwords) Exclude(text string) iter.Seq[Match] {
 
 // Check if the given word is a stopword.
 func (s *Stopwords) Contains(word string) bool {
-	panic("todo")
+	_, found := s.Trie.Find(strings.ToLower(word))
+	return found
 }
 
 // Iterate over all words
