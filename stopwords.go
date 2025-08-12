@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/derekparker/trie/v3"
 )
@@ -111,7 +112,7 @@ func iterWords(text string) iter.Seq[Match] {
 		end := 0
 		for i, r := range text {
 			if unicode.IsLetter(r) {
-				end = i + 1
+				end = i + utf8.RuneLen(r)
 				continue
 			}
 			if start < end {
