@@ -47,3 +47,21 @@ func TestExclude_English(t *testing.T) {
 	is.Equal(iter2text(sw.Exclude("never gonna give you up")), "gonna")
 	is.Equal(iter2text(sw.Exclude("I want an apple")), "apple")
 }
+
+func TestFind_MultibyteSeparators(t *testing.T) {
+	is := is.New(t)
+	sw := stopwords.MustGet("en")
+
+	// Words following a multibyte separator rune (em-dash, curly
+	// apostrophe, ellipsis) must not include the separator's trailing
+	// UTF-8 continuation bytes.
+	is.Equal(iter2text(sw.Find("give\u2014you")), "give you")   // em-dash
+	is.Equal(iter2text(sw.Find("an\u2026almost")), "an almost") // ellipsis
+	// "s" is a stopword; with the corrupted "\x80\x99s" word it was not.
+	is.Equal(iter2text(sw.Find("gonna\u2019s apple")), "s") // curly apostrophe
+
+	// Match bounds must point at the word itself, not into the separator.
+	for m := range sw.Find("give\u2014you") {
+		is.Equal(m.Word, "give\u2014you"[m.Start:m.End])
+	}
+}

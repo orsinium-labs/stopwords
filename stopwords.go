@@ -125,7 +125,7 @@ func iterWords(text string) iter.Seq[Match] {
 					break
 				}
 			}
-			start = i + 1
+			start = i + utf8.RuneLen(r)
 		}
 
 		if start < end {
